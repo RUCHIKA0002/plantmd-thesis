@@ -1,7 +1,6 @@
 from fpdf import FPDF
 import datetime
 
-
 def generate_pdf(result: dict) -> bytes:
     pdf = FPDF()
     pdf.add_page()
@@ -23,7 +22,8 @@ def generate_pdf(result: dict) -> bytes:
         pdf.set_fill_color(250, 238, 218)
         pdf.set_text_color(133, 79, 11)
     pdf.set_font("Helvetica", "B", 14)
-    pdf.cell(0, 12, f"  Diagnosis: {result['disease_name']}", ln=True, fill=True)
+    name = result['disease_name'].encode('latin-1', 'replace').decode('latin-1')
+    pdf.cell(0, 12, f"  Diagnosis: {name}", ln=True, fill=True)
     pdf.set_text_color(0, 0, 0)
     pdf.ln(4)
     pdf.set_font("Helvetica", "", 11)
@@ -33,9 +33,12 @@ def generate_pdf(result: dict) -> bytes:
     if result.get("scientific_name"):
         pdf.set_font("Helvetica", "I", 10)
         pdf.set_text_color(100, 100, 100)
-        pdf.cell(0, 7, f"Scientific name: {result['scientific_name']}", ln=True)
+        sname = result['scientific_name'].encode('latin-1', 'replace').decode('latin-1')
+        pdf.cell(0, 7, f"Scientific name: {sname}", ln=True)
         pdf.set_text_color(0, 0, 0)
     pdf.ln(4)
+    def clean(text):
+        return text.encode('latin-1', 'replace').decode('latin-1')
     def section(title, lines):
         pdf.set_font("Helvetica", "B", 12)
         pdf.set_text_color(45, 106, 79)
@@ -43,12 +46,12 @@ def generate_pdf(result: dict) -> bytes:
         pdf.set_text_color(0, 0, 0)
         pdf.set_font("Helvetica", "", 11)
         for line in lines:
-            pdf.multi_cell(0, 7, f"  {line}")
+            pdf.multi_cell(0, 7, f"  {clean(str(line))}")
         pdf.ln(3)
     section("Observation", [result.get("description", "")])
-    section("Recommended Treatments", [f"• {t}" for t in result.get("treatments", [])])
-    section("Possible Causes", [f"• {c}" for c in result.get("causes", [])])
-    section("Prevention Tips", [f"• {p}" for p in result.get("prevention", [])])
+    section("Recommended Treatments", [f"* {t}" for t in result.get("treatments", [])])
+    section("Possible Causes", [f"* {c}" for c in result.get("causes", [])])
+    section("Prevention Tips", [f"* {p}" for p in result.get("prevention", [])])
     pdf.set_y(-20)
     pdf.set_font("Helvetica", "I", 9)
     pdf.set_text_color(150, 150, 150)
